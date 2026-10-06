@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ignite — Launch builder</title>
+<meta name="description" content="Create and launch your Solana token with Ignite.">
+<meta name="theme-color" content="#060707">
+<meta property="og:title" content="Ignite — Launch builder">
+<meta property="og:description" content="Create and launch your Solana token with Ignite.">
+<meta property="og:image" content="/assets/ignite-logo.png">
+<link rel="icon" type="image/png" href="/assets/ignite-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&amp;family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400..600&amp;display=swap">
+<style>
+body{margin:0;background:#060707}
+*{box-sizing:border-box}
+a{color:#C6FF3D}a:hover{color:#E2FF8F}
+.sl{font-family:'Geist',ui-sans-serif,system-ui,sans-serif;color:#ECEFE6;-webkit-font-smoothing:antialiased}
+.disp{font-family:'Archivo','Arial Narrow',sans-serif;font-stretch:125%;font-weight:800;letter-spacing:-0.035em}
+.mono{font-family:'Geist Mono',ui-monospace,SFMono-Regular,monospace}
+.lime{color:#C6FF3D}
+.glass{background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.012));border:1px solid rgba(255,255,255,.085);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 24px;border-radius:999px;font:600 15px/1 'Geist',system-ui,sans-serif;text-decoration:none;cursor:pointer;border:0;transition:transform .25s cubic-bezier(.2,.7,.2,1),box-shadow .3s,background .2s,color .2s,opacity .2s}
+.btn-lime{background:#C6FF3D;color:#0A0C05;box-shadow:0 0 0 1px rgba(198,255,61,.45),0 10px 40px -10px rgba(198,255,61,.6)}
+.btn-lime:hover{color:#0A0C05;transform:translateY(-2px);box-shadow:0 0 0 1px rgba(198,255,61,.8),0 16px 60px -8px rgba(198,255,61,.85)}
+.btn-lime:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-ghost{background:rgba(255,255,255,.04);color:#ECEFE6;border:1px solid rgba(255,255,255,.14)}
+.btn-ghost:hover{color:#fff;background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.24)}
+.btn-sm{min-height:44px;padding:0 18px;font-size:14px}
+.field{width:100%;height:52px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:0 16px;color:#ECEFE6;font:400 15px 'Geist',system-ui,sans-serif;outline:none;transition:border-color .2s,background .2s,box-shadow .2s}
+.field::placeholder{color:#5E645A}
+.field:focus{border-color:rgba(198,255,61,.6);background:rgba(198,255,61,.03);box-shadow:0 0 0 4px rgba(198,255,61,.08)}
+textarea.field{height:96px;padding:14px 16px;resize:none;line-height:1.5}
+.lbl{font-size:12px;letter-spacing:.14em;color:#8E948A;text-transform:uppercase}
+@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(120px,80px) scale(1.15)}}
+@keyframes drift2{0%,100%{transform:translate(0,0) scale(1.1)}50%{transform:translate(-140px,-60px) scale(.92)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(198,255,61,.65)}60%{box-shadow:0 0 0 9px rgba(198,255,61,0)}}
+@keyframes spinner{to{transform:rotate(360deg)}}
+@keyframes enter{from{opacity:0;transform:translateY(18px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes livein{0%{opacity:0;transform:scale(.9);letter-spacing:.1em}100%{opacity:1;transform:none}}
+@keyframes ring{0%{transform:scale(.6);opacity:.8}100%{transform:scale(2.4);opacity:0}}
+@keyframes qrscan{0%,100%{top:8%}50%{top:88%}}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none}
+.a1{animation:drift1 22s ease-in-out infinite}.a2{animation:drift2 26s ease-in-out infinite}
+.livedot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#C6FF3D;animation:pulse 1.8s infinite;flex:none}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid rgba(198,255,61,.25);border-top-color:#C6FF3D;animation:spinner .8s linear infinite;flex:none}
+.enter{animation:enter .6s cubic-bezier(.2,.7,.2,1) both}
+.rail-item{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;color:#5E645A;background:transparent;border:1px solid transparent;font:500 14px 'Geist',system-ui,sans-serif;text-align:left;width:100%;min-height:52px;cursor:default;transition:all .35s}
+.rail-item .rn{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font:500 11px 'Geist Mono',monospace;flex:none;transition:all .35s}
+.rail-item.done{color:#A4AA9F;cursor:pointer}
+.rail-item.done:hover{background:rgba(255,255,255,.04)}
+.rail-item.done .rn{background:rgba(198,255,61,.12);border-color:rgba(198,255,61,.4);color:#C6FF3D}
+.rail-item.active{color:#ECEFE6;background:rgba(198,255,61,.07);border-color:rgba(198,255,61,.35)}
+.rail-item.active .rn{background:#C6FF3D;border-color:#C6FF3D;color:#0A0C05;box-shadow:0 0 24px -4px rgba(198,255,61,.9)}
+.stage{display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;border:1px solid rgba(255,255,255,.07);color:#5E645A;transition:all .4s}
+.stage .sdot{width:22px;height:22px;border-radius:50%;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none}
+.stage.busy{color:#ECEFE6;border-color:rgba(198,255,61,.35);background:rgba(198,255,61,.05)}
+.stage.done{color:#A4AA9F}
+.stage.done .sdot{background:#C6FF3D;border-color:#C6FF3D}
+.drop{display:flex;align-items:center;gap:16px;padding:16px;border-radius:14px;border:1px dashed rgba(255,255,255,.18);cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover{border-color:rgba(198,255,61,.6);background:rgba(198,255,61,.03)}
+.livebig{animation:livein 1s cubic-bezier(.2,.7,.2,1) both}
+.ringfx{position:absolute;inset:0;border-radius:50%;border:1px solid #C6FF3D;animation:ring 2.4s cubic-bezier(.2,.7,.2,1) infinite}
+.ringfx.r2{animation-delay:1.2s}
+.back{color:#8E948A;text-decoration:none;font-size:14px;display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.back:hover{color:#ECEFE6}
+.row{display:flex;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px}
+.row span:first-child{color:#8E948A}
+.qrline{position:absolute;left:6%;right:6%;height:2px;background:#C6FF3D;box-shadow:0 0 16px 2px rgba(198,255,61,.8);animation:qrscan 3.2s ease-in-out infinite;border-radius:2px}
+.addr{word-break:break-all}
+@keyframes breathe{0%,100%{transform:scale(.94);filter:drop-shadow(0 0 10px rgba(198,255,61,.3))}50%{transform:scale(1.05);filter:drop-shadow(0 0 30px rgba(198,255,61,.75))}}
+@keyframes fill{from{width:0}to{width:100%}}
+@keyframes msgswap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.orbit{position:relative;width:132px;height:132px;display:flex;align-items:center;justify-content:center}
+.orb-ring{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 50%,rgba(198,255,61,.2) 70%,#C6FF3D 92%,transparent 100%);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:spinner 1.3s linear infinite}
+.orb-ring2{position:absolute;inset:16px;border-radius:50%;border:1px dashed rgba(198,255,61,.35);animation:spinner 9s linear infinite reverse}
+.breathe{animation:breathe 2.4s ease-in-out infinite}
+.track{width:100%;max-width:420px;height:4px;border-radius:4px;background:rgba(255,255,255,.07);overflow:hidden}
+.lbar{height:100%;width:0;background:#C6FF3D;box-shadow:0 0 16px rgba(198,255,61,.8);border-radius:4px;animation-name:fill;animation-timing-function:linear;animation-fill-mode:forwards}
+.swap{animation:msgswap .45s cubic-bezier(.2,.7,.2,1) both}
+.field.err{border-color:rgba(255,154,98,.7);box-shadow:0 0 0 4px rgba(255,154,98,.1)}
+.errbox{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;border:1px solid rgba(255,154,98,.45);background:rgba(255,154,98,.07);color:#FFC3A0;font-size:14px;line-height:1.5;animation:shake .45s ease both}
+@media (max-width:860px){.hide-sm{display:none !important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none !important;transition:none !important}}
+</style>
+<style>dc-if,dc-t{display:contents}dc-if[hidden]{display:none}html{scroll-behavior:smooth}</style>
+</head>
+<body>
+<div id="dc-root">
+
+<div class="sl" style="position: relative; overflow: hidden; background: #060707; min-height: 100vh">
+  <div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none">
+    <div class="blob a1" style="top: -240px; left: -200px; width: 640px; height: 640px; background: rgba(198,255,61,0.14)"></div>
+    <div class="blob a2" style="bottom: -260px; right: -200px; width: 700px; height: 700px; background: rgba(198,255,61,0.10)"></div>
+    <div style="position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px); background-size: 88px 88px; -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 20%, #000 10%, transparent 70%); mask-image: radial-gradient(ellipse 60% 50% at 50% 20%, #000 10%, transparent 70%)"></div>
+  </div>
+
+  <div style="position: relative; z-index: 1; max-width: 1360px; margin: 0 auto; padding: 18px 24px 48px">
+    <!-- Top bar -->
+    <header class="glass" style="border-radius: 999px; padding: 8px 22px 8px 16px; min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: rgba(10,12,11,0.55)">
+      <a href="/" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: #ECEFE6">
+        <img src="assets/ignite-logo.png" alt="" style="width: 38px; height: 38px; display: block">
+        <span class="disp" style="font-size: 19px; letter-spacing: -0.02em">Ignite</span>
+      </a>
+      <div class="mono" style="font-size: 12px; letter-spacing: 0.16em; color: #8E948A">STEP <span class="lime"><dc-t data-text="stepNum"></dc-t></span> / 05 · <dc-t data-text="stepLabel"></dc-t></div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 24px; margin-top: 32px; align-items: flex-start">
+
+      <!-- Stepper rail -->
+      <nav aria-label="Launch steps" class="glass" style="flex: 1 1 240px; max-width: 280px; border-radius: 22px; padding: 14px; display: flex; flex-direction: column; gap: 4px">
+        <div style="padding: 8px 14px 14px"><a class="back" href="/"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"></path><path d="M11 6l-6 6 6 6"></path></svg>Back to site</a></div>
+        <template data-for="rail" data-as="r">
+          <button type="button" data-attr-class="rail-item {{r.cls}}" data-on-click="r.go"><span class="rn"><dc-t data-text="r.n"></dc-t></span><span class="mono" style="letter-spacing: 0.12em; font-size: 13px"><dc-t data-text="r.label"></dc-t></span></button>
+        </template>
+      </nav>
+
+      <!-- Main panel -->
+      <main class="glass" style="flex: 999 1 560px; min-width: 0; border-radius: 26px; padding: clamp(24px, 4vw, 48px); min-height: 680px; background: rgba(10,12,11,0.6)">
+
+        <!-- LaunchBuilder: CREATE -->
+        <dc-if data-if="isCreate">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">Create your token.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Name, ticker, supply, art. That is the whole form.</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: 18px">
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <label class="lbl mono" for="f-name">Name</label>
+                <input id="f-name" class="field" type="text" placeholder="Nova" data-prop-value="form.name" data-on-change="onName" maxlength="32">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <label class="lbl mono" for="f-ticker">Ticker</label>
+                <input id="f-ticker" class="field mono" type="text" placeholder="NOVA" data-prop-value="form.ticker" data-on-change="onTicker" maxlength="10">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <label class="lbl mono" for="f-supply">Supply</label>
+                <input id="f-supply" class="field mono" type="text" inputmode="numeric" placeholder="1000000000" data-prop-value="form.supply" data-on-change="onSupply">
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px">
+                <span class="lbl mono">Art</span>
+                <label class="drop" for="f-art">
+                  <span style="position: relative; overflow: hidden; width: 44px; height: 44px; border-radius: 12px; background: rgba(198,255,61,0.08); border: 1px solid rgba(198,255,61,0.25); display: flex; align-items: center; justify-content: center; flex: none">
+                    <dc-if data-if="hasArt"><img data-attr-src="{{artUrl}}" alt="Token art" data-on-error="onArtError" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></dc-if>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"></path><path d="M7 9l5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg>
+                  </span>
+                  <span style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+                    <span style="font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"><dc-t data-text="artLabel"></dc-t></span>
+                    <span class="mono" style="font-size: 12px; color: #6E746A">PNG, JPG or GIF</span>
+                  </span>
+                </label>
+                <input id="f-art" type="file" accept="image/*" data-on-change="onArt" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <label class="lbl mono" for="f-desc">Description <span style="color: #5E645A">(optional)</span></label>
+              <textarea id="f-desc" class="field" placeholder="One line your community will repeat." data-prop-value="form.desc" data-on-change="onDesc"></textarea>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding-top: 8px">
+              <span class="mono" style="font-size: 13px; color: #6E746A"><dc-t data-text="createHint"></dc-t></span>
+              <button type="button" class="btn btn-lime" data-prop-disabled="createBlocked" data-on-click="next">Continue to payment</button>
+            </div>
+          </div>
+        </dc-if>
+
+        <!-- LaunchConfirmation + TransactionStatus: PAY (plain transfer, no wallet connection) -->
+        <dc-if data-if="isPay">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">Pay once.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Send 0.1 SOL to the Ignite wallet from any Solana wallet, then paste the Solscan link of that transaction. No wallet connection.</p>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 28px; align-items: stretch">
+              <!-- QR -->
+              <div style="flex: 0 0 auto; display: flex; flex-direction: column; gap: 12px; align-items: center">
+                <div style="position: relative; width: 262px; height: 262px; border-radius: 20px; background: #ECEFE6; padding: 8px; box-shadow: 0 0 0 1px rgba(198,255,61,0.35), 0 30px 80px -30px rgba(198,255,61,0.55)">
+                  <img src="assets/ignite-pay-qr.png" alt="QR code to pay 0.1 SOL to the Ignite wallet" style="width: 246px; height: 246px; display: block; image-rendering: pixelated; border-radius: 12px">
+                  <dc-if data-if="payIdle"><span class="qrline" aria-hidden="true"></span></dc-if>
+                </div>
+                <span class="mono" style="font-size: 11px; letter-spacing: 0.16em; color: #6E746A">SCAN WITH ANY SOLANA WALLET</span>
+              </div>
+
+              <!-- Details -->
+              <div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+                <div style="display: flex; flex-direction: column; gap: 8px">
+                  <span class="lbl mono">Amount</span>
+                  <span class="disp" style="font-size: 44px; line-height: 1">0.1 <span class="lime">SOL</span></span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px">
+                  <span class="lbl mono">Send to</span>
+                  <div style="display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03)">
+                    <span class="mono addr" style="flex: 1; min-width: 0; font-size: 14px; line-height: 1.5"><dc-t data-text="payAddress"></dc-t></span>
+                    <button type="button" class="btn btn-ghost btn-sm" data-on-click="copyAddress" style="flex: none"><dc-t data-text="copyAddrLabel"></dc-t></button>
+                  </div>
+                  <span class="mono" style="font-size: 12px; color: #6E746A">Solana mainnet only. Send at least 0.1 SOL.</span>
+                </div>
+                <div style="display: flex; flex-direction: column">
+                  <div class="row"><span>Token</span><span><dc-t data-text="tokenName"></dc-t></span></div>
+                  <div class="row"><span>Ticker</span><span class="mono"><dc-t data-text="tokenTicker"></dc-t></span></div>
+                  <div class="row" style="border-bottom: 0"><span>Supply</span><span class="mono"><dc-t data-text="tokenSupply"></dc-t></span></div>
+                </div>
+              </div>
+            </div>
+
+            <dc-if data-if="payIdle">
+              <div style="display: flex; flex-direction: column; gap: 12px">
+                <label class="lbl mono" for="f-tx">Transaction link</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 12px">
+                  <input id="f-tx" data-attr-class="field mono {{txFieldCls}}" type="text" placeholder="https://solscan.io/tx/…" data-prop-value="txInput" data-on-change="onTx" style="flex: 1 1 320px; min-width: 0" autocomplete="off" spellcheck="false">
+                  <button type="button" class="btn btn-lime" data-prop-disabled="txBlocked" data-on-click="verifyTx" style="min-height: 52px">Verify payment</button>
+                </div>
+                <dc-if data-if="payHasError">
+                  <div class="errbox" role="alert">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9A62" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5"></path><path d="M12 16.5v.01"></path></svg>
+                    <span><strong style="color: #FFD9C2"><dc-t data-text="payErrorTitle"></dc-t></strong> <dc-t data-text="payError"></dc-t></span>
+                  </div>
+                </dc-if>
+              </div>
+            </dc-if>
+            <dc-if data-if="payChecking">
+              <div class="glass enter" style="border-radius: 20px; padding: 36px 24px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center">
+                <div class="orbit" aria-hidden="true">
+                  <span class="orb-ring"></span><span class="orb-ring2"></span>
+                  <img class="breathe" src="assets/ignite-logo.png" alt="" style="width: 70px; height: 70px">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: center" role="status">
+                  <template data-for="payMsgList" data-as="m"><span class="swap" style="font-size: 16px"><dc-t data-text="m.text"></dc-t></span></template>
+                  <span class="mono" style="font-size: 12px; color: #8E948A">Checking the transaction on Solana</span>
+                </div>
+                <div class="track"><div class="lbar" data-attr-style="animation-duration: {{payMs}}"></div></div>
+              </div>
+            </dc-if>
+            <dc-if data-if="payDone">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-radius: 16px; border: 1px solid rgba(198,255,61,0.4); background: rgba(198,255,61,0.07)">
+                <span style="display: flex; align-items: center; gap: 12px">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>
+                  <span style="display: flex; flex-direction: column; gap: 4px">
+                    <span style="font-size: 15px">Payment verified on Solana.</span>
+                    <span class="mono" style="font-size: 12px; color: #8E948A">tx <dc-t data-text="payTx"></dc-t></span>
+                  </span>
+                </span>
+                <button type="button" class="btn btn-lime" data-on-click="next">Connect Telegram</button>
+              </div>
+            </dc-if>
+          </div>
+        </dc-if>
+
+        <!-- CONNECT (Telegram) -->
+        <dc-if data-if="isConnect">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">Connect Telegram.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Open the Ignite bot and send this one-time code. That ties this launch to your Telegram.</p>
+            </div>
+            <div class="glass" style="border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 20px; align-items: flex-start">
+              <span class="lbl mono">Send to @IgniteLauncherXbot</span>
+              <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+                <span class="disp mono" style="font-size: clamp(28px, 4vw, 44px); letter-spacing: 0.02em; font-stretch: 100%">/start <span class="lime"><dc-t data-text="linkCode"></dc-t></span></span>
+                <button type="button" class="btn btn-ghost btn-sm" data-on-click="copyCode"><dc-t data-text="copyLabel"></dc-t></button>
+              </div>
+              <a class="btn btn-lime btn-sm" href="https://t.me/IgniteLauncherXbot" target="_blank" rel="noopener noreferrer">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4L3 11l6 2 2 6 3-4 5 4z"></path></svg>
+                Open the bot
+              </a>
+            </div>
+            <dc-if data-if="connectIdle">
+              <div style="display: flex; justify-content: flex-end"><button type="button" class="btn btn-lime" data-on-click="checkLink">I sent it</button></div>
+            </dc-if>
+            <dc-if data-if="connectChecking">
+              <div class="glass enter" style="border-radius: 20px; padding: 36px 24px; display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center">
+                <div class="orbit" aria-hidden="true">
+                  <span class="orb-ring"></span><span class="orb-ring2"></span>
+                  <img class="breathe" src="assets/ignite-logo.png" alt="" style="width: 70px; height: 70px">
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px; align-items: center" role="status">
+                  <template data-for="linkMsgList" data-as="m"><span class="swap" style="font-size: 16px"><dc-t data-text="m.text"></dc-t></span></template>
+                  <span class="mono" style="font-size: 12px; color: #8E948A">This takes a few seconds</span>
+                </div>
+                <div class="track"><div class="lbar" data-attr-style="animation-duration: {{linkMs}}"></div></div>
+              </div>
+            </dc-if>
+            <dc-if data-if="connectDone">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 20px; border-radius: 16px; border: 1px solid rgba(198,255,61,0.4); background: rgba(198,255,61,0.07)">
+                <span style="display: flex; align-items: center; gap: 12px; font-size: 15px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C6FF3D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>Telegram connected.</span>
+                <button type="button" class="btn btn-lime" data-on-click="next">Review and execute</button>
+              </div>
+            </dc-if>
+          </div>
+        </dc-if>
+
+        <!-- EXECUTE (nothing to sign) -->
+        <dc-if data-if="isExecute">
+          <div class="enter" style="display: flex; flex-direction: column; gap: 32px">
+            <div style="display: flex; flex-direction: column; gap: 12px">
+              <h1 class="disp" style="margin: 0; font-size: clamp(34px, 4vw, 56px); line-height: 0.95">One command.</h1>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">Execute here, or type <span class="mono lime">/launch</span> to the bot. Same result.</p>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px">
+              <template data-for="stages" data-as="st">
+                <div data-attr-class="stage {{st.cls}}">
+                  <span class="sdot">
+                    <dc-if data-if="st.busy"><span class="spin" style="width: 14px; height: 14px"></span></dc-if>
+                    <dc-if data-if="st.done"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0A0C05" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg></dc-if>
+                  </span>
+                  <span style="font-size: 15px; flex: 1"><dc-t data-text="st.label"></dc-t></span>
+                  <span class="mono" style="font-size: 12px"><dc-t data-text="st.note"></dc-t></span>
+                </div>
+              </template>
+            </div>
+            <dc-if data-if="execIdle">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+                <span class="mono" style="font-size: 13px; color: #6E746A">Nothing to sign. Ignite handles it.</span>
+                <button type="button" class="btn btn-lime" data-on-click="execute" style="min-height: 60px; padding: 0 36px; font-size: 17px">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17l6-5-6-5"></path><path d="M12 19h8"></path></svg>
+                  Execute launch
+                </button>
+              </div>
+            </dc-if>
+          </div>
+        </dc-if>
+
+        <!-- LiveLaunch -->
+        <dc-if data-if="isLive">
+          <div class="enter" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 32px; padding: 24px 0; min-width: 0; overflow: hidden">
+            <div style="position: relative; width: 120px; height: 120px">
+              <span class="ringfx"></span><span class="ringfx r2"></span>
+              <span class="disp" style="position: absolute; inset: 0; border-radius: 50%; background: #C6FF3D; color: #0A0C05; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: 0 0 80px -10px rgba(198,255,61,0.9); overflow: hidden"><dc-t data-text="initial"></dc-t><dc-if data-if="hasArt"><img data-attr-src="{{artUrl}}" alt="Token art" data-on-error="onArtError" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%"></dc-if></span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; align-items: center">
+              <div class="mono" style="display: inline-flex; align-items: center; gap: 10px; font-size: 12px; letter-spacing: 0.2em; color: #C6FF3D"><span class="livedot"></span>LIVE ON SOLANA</div>
+              <div style="width: 100%; max-width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: center">
+                <h1 class="disp livebig" data-attr-style="margin: 0; max-width: 100%; font-size: {{liveFont}}; line-height: 0.95; overflow-wrap: anywhere; word-break: break-all"><dc-t data-text="tokenTicker"></dc-t></h1>
+                <span class="disp" style="font-size: clamp(30px, 4vw, 52px); line-height: 1">is live.</span>
+              </div>
+              <p style="margin: 0; color: #A4AA9F; font-size: 16px">The details are waiting in your Telegram.</p>
+            </div>
+            <button type="button" class="btn btn-lime" data-on-click="reset" style="min-height: 56px; padding: 0 32px">Launch another</button>
+          </div>
+        </dc-if>
+      </main>
+
+      <!-- Token preview -->
+      <aside class="hide-sm" style="flex: 1 1 300px; max-width: 340px; display: flex; flex-direction: column; gap: 16px">
+        <div class="glass" style="border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 22px">
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <span class="lbl mono">Preview</span>
+            <span class="mono" style="display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 0.14em; color: #C6FF3D"><span class="livedot"></span><dc-t data-text="previewStatus"></dc-t></span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 16px">
+            <span class="disp" style="position: relative; overflow: hidden; width: 64px; height: 64px; border-radius: 18px; background: #C6FF3D; color: #0A0C05; display: flex; align-items: center; justify-content: center; font-size: 28px; flex: none"><dc-t data-text="initial"></dc-t><dc-if data-if="hasArt"><img data-attr-src="{{artUrl}}" alt="Token art" data-on-error="onArtError" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #0B0D0C"></dc-if></span>
+            <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <span class="disp" style="font-size: 22px; letter-spacing: -0.02em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"><dc-t data-text="tokenName"></dc-t></span>
+              <span class="mono lime" style="font-size: 14px"><dc-t data-text="tokenTicker"></dc-t></span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column">
+            <div class="row"><span>Supply</span><span class="mono"><dc-t data-text="tokenSupply"></dc-t></span></div>
+            <div class="row"><span>Payment</span><span class="mono"><dc-t data-text="payShort"></dc-t></span></div>
+            <div class="row" style="border-bottom: 0"><span>Telegram</span><span class="mono"><dc-t data-text="tgShort"></dc-t></span></div>
+          </div>
+        </div>
+        <div class="glass mono" style="border-radius: 18px; padding: 18px 20px; font-size: 12px; line-height: 1.7; color: #6E746A">
+          <span class="lime">tip</span> · Ignite never asks to connect your wallet or sign anything.
+        </div>
+      </aside>
+    </div>
+  </div>
+</div>
+</div>
+<script src="/dc-lite.js"></script>
+<script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Component.initialState();
+    this.timers = [];
+  }
+
+  static PAY_ADDRESS = '6XakoaCtw7CEb3a9Qnt1fhjKi8Bst1U1Muns6Bch45aw';
+  static FEE_LAMPORTS = 100000000; // 0.1 SOL
+  // Public endpoint works for testing; use your own RPC (Helius, QuickNode, Triton) in production.
+  static RPC_URL = 'https://api.mainnet-beta.solana.com';
+  static VERIFY_MS = 10000;
+  static PAY_MSGS = ['Fetching your transaction', 'Checking the recipient', 'Confirming the amount', 'Finalizing'];
+  static LINK_MSGS = ['Waiting for your /start message', 'Talking to the Ignite bot', 'Linking this launch to your Telegram'];
+
+  static initialState() {
+    return {
+      step: 0,
+      form: { name: '', ticker: '', supply: '1000000000', desc: '' },
+      artName: '', artUrl: '',
+      pay: 'idle', txInput: '', payError: '', payErrorTitle: '', paySig: '', addrCopied: false, payMsgIdx: 0,
+      link: 'idle', linkCode: '7F3K-Q9', copied: false, linkMs: 12000, linkMsgIdx: 0,
+      exec: 'idle', stageIdx: -1
+    };
+  }
+
+  static STEPS = ['CREATE', 'PAY', 'CONNECT', 'EXECUTE', 'LIVE'];
+  static STAGES = [
+    { label: 'Mint token', note: 'spl' },
+    { label: 'Upload metadata', note: 'ipfs' },
+    { label: 'Broadcast to Solana', note: 'mainnet' },
+    { label: 'Notify you on Telegram', note: 'bot' }
+  ];
+
+  wait(ms) { return new Promise((r) => { const t = setTimeout(r, ms); this.timers.push(t); }); }
+  cycle(key, list, every) {
+    clearInterval(this.cycler);
+    this.setState({ [key]: 0 });
+    this.cycler = setInterval(() => this.setState((s) => ({ [key]: Math.min(s[key] + 1, list.length - 1) })), every);
+  }
+  stopCycle() { clearInterval(this.cycler); }
+  componentWillUnmount() { this.timers.forEach(clearTimeout); clearInterval(this.cycler); }
+
+  // ---------------------------------------------------------------
+  // PAYMENT VERIFICATION (real, on-chain)
+  // Accepts a Solscan link (solscan.io/tx/<sig>), other explorer links,
+  // or a bare signature. Reads the transaction from Solana RPC — the
+  // same data Solscan shows — and checks it succeeded and moved at
+  // least 0.1 SOL into PAY_ADDRESS.
+  // ---------------------------------------------------------------
+  static parseSignature(input) {
+    const t = String(input || '').trim();
+    const m = t.match(/(?:solscan\.io|explorer\.solana\.com|solana\.fm|orb\.helius\.dev)\/tx\/([1-9A-HJ-NP-Za-km-z]{80,90})(?:[?#/].*)?$/);
+    if (m) return m[1];
+    if (/^[1-9A-HJ-NP-Za-km-z]{80,90}$/.test(t)) return t;
+    return null;
+  }
+
+  async verifyPaymentOnChain(sig) {
+    let body;
+    try {
+      const r = await fetch(Component.RPC_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0', id: 1, method: 'getTransaction',
+          params: [sig, { encoding: 'jsonParsed', maxSupportedTransactionVersion: 0, commitment: 'confirmed' }]
+        })
+      });
+      if (!r.ok) return { ok: false, reason: 'network' };
+      body = await r.json();
+    } catch (err) {
+      return { ok: false, reason: 'network' };
+    }
+    if (body.error) return { ok: false, reason: 'notfound' };
+    const tx = body.result;
+    if (!tx || !tx.meta || !tx.transaction) return { ok: false, reason: 'notfound' };
+    if (tx.meta.err) return { ok: false, reason: 'failed' };
+    const keys = tx.transaction.message.accountKeys.map((k) => (typeof k === 'string' ? k : k.pubkey));
+    const idx = keys.indexOf(Component.PAY_ADDRESS);
+    if (idx < 0) return { ok: false, reason: 'recipient' };
+    const received = tx.meta.postBalances[idx] - tx.meta.preBalances[idx];
+    if (received < Component.FEE_LAMPORTS) return { ok: false, reason: 'amount', received };
+    return { ok: true, sig, received };
+  }
+
+  static errorFor(res) {
+    const tail = 'Paste the correct Solscan transaction link.';
+    switch (res.reason) {
+      case 'format': return ['Invalid transaction.', 'That is not a transaction link. ' + tail];
+      case 'notfound': return ['Invalid transaction.', 'We could not find it on Solana. ' + tail];
+      case 'failed': return ['Invalid transaction.', 'That transaction failed on-chain. ' + tail];
+      case 'recipient': return ['Invalid transaction.', 'It did not send SOL to the Ignite wallet. ' + tail];
+      case 'amount': return ['Invalid transaction.', 'It sent ' + (Math.max(0, res.received) / 1e9).toFixed(4) + ' SOL. The fee is 0.1 SOL. ' + tail];
+      default: return ['Could not verify.', 'We could not reach the Solana network. Check your connection and try again.'];
+    }
+  }
+
+  async runVerify() {
+    const sig = Component.parseSignature(this.state.txInput);
+    this.setState({ pay: 'checking', payError: '', payErrorTitle: '' });
+    this.cycle('payMsgIdx', Component.PAY_MSGS, Component.VERIFY_MS / Component.PAY_MSGS.length);
+    let check;
+    if (!sig) check = Promise.resolve({ ok: false, reason: 'format' });
+    else if (this.props.simulateVerify) check = Promise.resolve({ ok: true, sig });
+    else check = this.verifyPaymentOnChain(sig);
+    const [res] = await Promise.all([check, this.wait(Component.VERIFY_MS)]);
+    this.stopCycle();
+    if (res.ok) {
+      this.setState({ pay: 'done', paySig: res.sig });
+    } else {
+      const [title, msg] = Component.errorFor(res);
+      this.setState({ pay: 'idle', payErrorTitle: title, payError: msg });
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // TELEGRAM LINK — waits 10–15s. Swap for a real poll of your bot
+  // backend ("has /start <code> arrived?") when it exists.
+  // ---------------------------------------------------------------
+  async runLink() {
+    const ms = 10000 + Math.floor(Math.random() * 5000);
+    this.setState({ link: 'checking', linkMs: ms });
+    this.cycle('linkMsgIdx', Component.LINK_MSGS, ms / Component.LINK_MSGS.length);
+    await this.wait(ms);
+    this.stopCycle();
+    this.setState({ link: 'done' });
+  }
+
+  async apiExecuteLaunch(onStage) {
+    for (let i = 0; i < Component.STAGES.length; i++) { onStage(i); await this.wait(1200); }
+    onStage(Component.STAGES.length);
+  }
+
+  setForm(key, value) { this.setState((s) => ({ form: { ...s.form, [key]: value } })); }
+  copy(text) {
+    const fallback = () => { const t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.position = 'fixed'; t.style.opacity = '0'; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); } catch (e) {} t.remove(); };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(fallback);
+      else fallback();
+    } catch (err) { fallback(); }
+  }
+
+  renderVals() {
+    const s = this.state;
+    const f = s.form;
+    const name = f.name.trim() || 'Your token';
+    const ticker = '$' + (f.ticker.trim().toUpperCase() || 'TICKER');
+    const supplyNum = Number(String(f.supply).replace(/[^0-9]/g, ''));
+    const supply = supplyNum ? supplyNum.toLocaleString('en-US') : '—';
+    const createBlocked = !(f.name.trim() && f.ticker.trim() && supplyNum > 0);
+    const step = s.step;
+    const last = Component.STEPS.length - 1;
+    const next = () => this.setState((st) => ({ step: Math.min(st.step + 1, last) }));
+
+    // Fit the live ticker inside the panel at any length.
+    const chars = Math.max(ticker.length, 4) * 0.95;
+    const px = Math.max(28, Math.min(104, Math.floor(520 / chars)));
+    const liveFont = 'min(' + px + 'px, calc((100vw - 96px) / ' + chars.toFixed(2) + '))';
+
+    const rail = Component.STEPS.map((label, i) => ({
+      n: '0' + (i + 1),
+      label,
+      cls: i < step ? 'done' : i === step ? 'active' : '',
+      go: () => { if (i < step && step < last && s.pay !== 'checking' && s.link !== 'checking') this.setState({ step: i }); }
+    }));
+
+    const stages = Component.STAGES.map((st, i) => ({
+      ...st,
+      busy: s.stageIdx === i,
+      done: s.stageIdx > i,
+      cls: s.stageIdx === i ? 'busy' : s.stageIdx > i ? 'done' : ''
+    }));
+
+    const sig = s.paySig;
+    return {
+      form: f,
+      rail,
+      stepNum: '0' + (step + 1),
+      stepLabel: Component.STEPS[step],
+      isCreate: step === 0, isPay: step === 1, isConnect: step === 2,
+      isExecute: step === 3, isLive: step === 4,
+      next,
+
+      tokenName: name, tokenTicker: ticker, tokenSupply: supply,
+      initial: name.charAt(0).toUpperCase(),
+      liveFont,
+      previewStatus: step === last ? 'LIVE' : 'DRAFT',
+      payShort: s.pay === 'done' ? 'verified' : 'pending',
+      tgShort: s.link === 'done' ? 'connected' : 'not linked',
+
+      onName: (e) => this.setForm('name', e.target.value),
+      onTicker: (e) => this.setForm('ticker', e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()),
+      onSupply: (e) => this.setForm('supply', e.target.value.replace(/[^0-9]/g, '')),
+      onDesc: (e) => this.setForm('desc', e.target.value),
+      onArt: (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!/^image\//.test(file.type)) { this.setState({ artName: 'Please choose an image file', artUrl: '' }); return; }
+        // Read as a data URL so the preview works without any upload.
+        // In production, upload `file` to your storage (IPFS etc.) for the token metadata.
+        const reader = new FileReader();
+        reader.onload = () => this.setState({ artName: file.name, artUrl: String(reader.result || '') });
+        reader.onerror = () => this.setState({ artName: 'Could not read that image', artUrl: '' });
+        reader.readAsDataURL(file);
+        e.target.value = '';
+      },
+      hasArt: !!s.artUrl,
+      artUrl: s.artUrl,
+      onArtError: () => this.setState({ artUrl: '' }),
+      artLabel: s.artName || 'Drop or choose an image',
+      createBlocked,
+      createHint: createBlocked ? 'Name, ticker and supply are required.' : 'Looks good. ' + ticker + ' is ready.',
+
+      payAddress: Component.PAY_ADDRESS,
+      copyAddrLabel: s.addrCopied ? 'Copied' : 'Copy',
+      copyAddress: () => { this.copy(Component.PAY_ADDRESS); this.setState({ addrCopied: true }); },
+      txInput: s.txInput,
+      onTx: (e) => this.setState({ txInput: e.target.value, payError: '', payErrorTitle: '' }),
+      txBlocked: !s.txInput.trim(),
+      txFieldCls: s.payError ? 'err' : '',
+      verifyTx: () => this.runVerify(),
+      payIdle: s.pay === 'idle',
+      payChecking: s.pay === 'checking',
+      payDone: s.pay === 'done',
+      payHasError: !!s.payError,
+      payError: s.payError,
+      payErrorTitle: s.payErrorTitle,
+      payMsgList: [{ text: Component.PAY_MSGS[s.payMsgIdx] }],
+      payMs: Component.VERIFY_MS + 'ms',
+      payTx: sig ? sig.slice(0, 6) + '…' + sig.slice(-6) : '',
+
+      linkCode: s.linkCode,
+      copyLabel: s.copied ? 'Copied' : 'Copy',
+      copyCode: () => { this.copy('/start ' + s.linkCode); this.setState({ copied: true }); },
+      connectIdle: s.link === 'idle',
+      connectChecking: s.link === 'checking',
+      connectDone: s.link === 'done',
+      linkMsgList: [{ text: Component.LINK_MSGS[s.linkMsgIdx] }],
+      linkMs: s.linkMs + 'ms',
+      checkLink: () => this.runLink(),
+
+      stages,
+      execIdle: s.exec === 'idle',
+      execute: async () => {
+        this.setState({ exec: 'running' });
+        await this.apiExecuteLaunch((i) => this.setState({ stageIdx: i }));
+        await this.wait(500);
+        this.setState({ exec: 'done', step: last });
+      },
+
+      reset: () => this.setState(Component.initialState())
+    };
+  }
+}
+DCLite.mount(Component, {"simulateVerify": false});
+</script>
+</body>
+</html>
